@@ -1,0 +1,564 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE> New Document </TITLE>
+<META NAME="Generator" CONTENT="EditPlus">
+<META NAME="Author" CONTENT="">
+<META NAME="Keywords" CONTENT="高性能JAVA队列,HTTP队列">
+<META NAME="Description" CONTENT="">
+</HEAD>
+
+<BODY>
+
+<p>
+</p>
+<h3>
+</h3>
+<h3>
+	队列服务环境:
+</h3>
+<p>
+</p>
+<p align="left">
+	建议环境:
+</p>
+<p align="left">
+	Linux 2.6 kernel及以上版本
+</p>
+<p align="left">
+	JDK 5.0 update 9及JDK 6.0以上版本
+</p>
+<p>
+	Googlecode: <a href="http://code.google.com/p/sqsdb/">http://code.google.com/p/sqsdb/</a>
+</p>
+<p>
+	SVN : http://sqsdb.googlecode.com/svn/trunk/
+</p>
+<h3>
+	队列服务简介:
+</h3>
+<p align="left">
+	基于 HTTP GET/POST 协议的轻量级简单消息队列服务，使用的 B+Tree Key/Value 数据库, 来做数据的持久化存储。网络通信采用JAVA的NIO方式.
+</p>
+<p align="left">
+	可以在任何文件系统上使用
+</p>
+<p align="left">
+	可以支持各种编程语言之间相互通信
+</p>
+<p align="left">
+	数据支持HA的集群机制
+</p>
+<p align="left">
+	支持数据的归档和数据恢复: 标准备份, 热备份, 正常恢复, 热恢复
+</p>
+<p align="left">
+	可以支持各种操作系统
+</p>
+<p align="left">
+	高并发，支持上万的并发连接
+</p>
+<p align="left">
+	支持多队列和队列文件共享
+</p>
+<p align="left">
+	低内存消耗，海量数据存储，支持TB级数据存储。
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>sqsdbserver.jar为服务器程序</strong>
+</p>
+<p align="left">
+	启动命令,例如: 
+</p>
+<p align="left">
+	(jdk5)java -Xms1024m -Xmx1024m -Xss128k -Djava.nio.channels.spi.SelectorProvider=sun.nio.ch.EPollSelectorProvider-XX:+UseParallelGC -XX:ParallelGCThreads=3 -jar sqsdbserver1.0.jar &amp;
+</p>
+<p align="left">
+	(jdk6)java -server -Xms1024m-Xmx1024m -Xss128k -XX:+AggressiveOpts -XX:+UseParallelGC -XX:ParallelGCThreads=3-XX:+UseBiasedLocking -XX:NewSize=64m -jar sqsdbserver1.0.jar &amp;
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>sqsdbclient.jar为客户端端程序</strong>
+</p>
+<p align="left">
+	启动命令,例如: java -server -Xms1024m -Xmx1024m -Xss128k -XX:+AggressiveOpts-XX:+UseParallelGC -XX:ParallelGCThreads=3 -XX:+UseBiasedLocking-XX:NewSize=64m -jar sqsdbclient1.0.jar &amp;
+</p>
+<p>
+	&nbsp;
+</p>
+<h3>
+	队列功能介绍:
+</h3>
+<p>
+	<strong>1.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;采用B+树,可支持指定位置的入库. 如可实现各种优先级</strong>
+</p>
+<p>
+	<strong>&nbsp;</strong>
+</p>
+<p>
+	<strong>2.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;支持按索引的队列提前,推迟和删除. 如可支持任意条件的提前和推迟</strong>
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>3.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;自定义存储对象</strong>
+</p>
+<p align="left">
+	支持JAVA注解方式的自定义的对象,介绍两个自带对象:
+</p>
+<p align="left">
+	对象QueueObject: 键(PK)为自增系列,自动生成.
+</p>
+<p align="left">
+	@Entity
+</p>
+<p align="left">
+	<strong>public class</strong> QueueObject{
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; @PrimaryKey(sequence=&quot;pk&quot;)
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> Long pk;
+</p>
+<p>
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> String content;
+</p>
+<p>
+	}
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	&nbsp;
+</p>
+<p align="left">
+	对象TCPObject: 键(PK)为自定义,不可重复.索引(sk1,sk2,sk3)可自定义,允许重复
+</p>
+<p align="left">
+	@Entity
+</p>
+<p align="left">
+	<strong>public class</strong> TCPObject{
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; @PrimaryKey
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> String pk;
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; @SecondaryKey(relate=Relationship.<em>MANY_TO_ONE</em>)
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> String sk1;
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; @SecondaryKey(relate=Relationship.<em>MANY_TO_ONE</em>)
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> String sk2;
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; @SecondaryKey(relate=Relationship.<em>MANY_TO_ONE</em>)
+</p>
+<p align="left">
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> String sk3;
+</p>
+<p>
+	&nbsp;&nbsp;&nbsp; <strong>private</strong> String content;
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>4.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;自定义均衡算法</strong>
+</p>
+<p align="left">
+	实现com.sinovatech.sqsdb.client.Equalizer接口, 可自定义均衡算法, 自带均衡实现:
+</p>
+<p align="left">
+	RoundRobin: 哈希取模方式,在服务器故障,自动分配到正常的服务器,使用方法详见使用说明
+</p>
+<p>
+	<strong>&nbsp;</strong>
+</p>
+<p>
+	<strong>5.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;自定义分隔字符</strong>
+</p>
+<p align="left">
+	由于HTTP协议使用&amp;和=进行参数分隔, 如果在内容包含此类字符, 可采用自定义分隔符进行分隔传递.
+</p>
+<h3>
+	队列服务配置:
+</h3>
+<p>
+	<strong>Minasocket.properties:</strong>
+</p>
+<p align="left">
+	#多网卡时用于指定IP
+</p>
+<p align="left">
+	server.ip=
+</p>
+<p align="left">
+	#SOCKET端口
+</p>
+<p align="left">
+	server.prot=8080
+</p>
+<p align="left">
+	#连接线程数量，如不设置为CPU数量加1
+</p>
+<p align="left">
+	socket.ThreadSize=20
+</p>
+<p align="left">
+	#服务端充许最大并发数
+</p>
+<p align="left">
+	server.maxNum=6000
+</p>
+<p align="left">
+	#服务器连接最大空闲时间(秒)
+</p>
+<p align="left">
+	socket.maxIdleTime=120
+</p>
+<p align="left">
+	#服务器监听队列的最大值
+</p>
+<p align="left">
+	socket.Backlog=1
+</p>
+<p align="left">
+	#输出缓冲区的大小
+</p>
+<p align="left">
+	socket.SendBufferSize=
+</p>
+<p align="left">
+	#输入缓冲区的大小
+</p>
+<p align="left">
+	socket.ReceiveBufferSize=
+</p>
+<p align="left">
+	#客户端到服务端最大连接数
+</p>
+<p align="left">
+	client.maxactive=2000
+</p>
+<p align="left">
+	#客户端最大空闲连接数
+</p>
+<p align="left">
+	client.maxidle=2000
+</p>
+<p align="left">
+	#客户端没有空闲连接等待毫秒数
+</p>
+<p align="left">
+	client.waitInterval=50
+</p>
+<p align="left">
+	#客户端建立连接最大等待时间毫秒数
+</p>
+<p align="left">
+	client.maxwait=3000
+</p>
+<p align="left">
+	#客户端连接超时时间(秒)
+</p>
+<p align="left">
+	client.Timeout=3
+</p>
+<p align="left">
+	#空闲连接的最大空闲时间毫秒数
+</p>
+<p align="left">
+	client.maxIdleTime=600000
+</p>
+<p align="left">
+	#间隔每过多少毫秒进行一次后台对象清理
+</p>
+<p align="left">
+	client.EvictionRunsMillis=60000
+</p>
+<p align="left">
+	#客户端调用服务器IP:PORT,多台用;号分隔
+</p>
+<p>
+	client.server.ips=192.168.1.207:8080;192.168.1.207:8080
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>sqsconfig.properties:</strong>
+</p>
+<p align="left">
+	#数据库文件物理路径
+</p>
+<p align="left">
+	bdb.path=./
+</p>
+<p align="left">
+	#编码方式
+</p>
+<p align="left">
+	Charset=UTF-8
+</p>
+<p align="left">
+	#分隔符,字符对应的ascii码十进制形式表示,可不用填-1
+</p>
+<p align="left">
+	separator.element=-1
+</p>
+<p align="left">
+	#连续取下一条记录的最大次数
+</p>
+<p align="left">
+	bdb.maxnext=1000
+</p>
+<p align="left">
+	#数据库使用内存大小
+</p>
+<p align="left">
+	bdb.CacheSize=
+</p>
+<p align="left">
+	#数据对象类 com.sinovatech.sqsdb.common.QueueObject;com.sinovatech.sqsdb.common.TCPObjectdefaultClass=com.sinovatech.sqsdb.common.TCPObject
+</p>
+<p align="left">
+	#数据保存方式:1.事务提交时，同步数据到磁盘，并等待磁盘完成;2.事务提交时，写数据到磁盘，不等待磁盘完成;3.事务提交时，不同步数据到磁盘
+</p>
+<p>
+	bdb.Durability=2
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>test.properties(测试使用):</strong>
+</p>
+<p align="left">
+	#服务器IP
+</p>
+<p align="left">
+	ip=192.168.2.62:8080
+</p>
+<p align="left">
+	#线程数
+</p>
+<p align="left">
+	thread.num=2(poll时为连接数,等待返回)
+</p>
+<p align="left">
+	#总发送次数
+</p>
+<p align="left">
+	thread.count=2
+</p>
+<p align="left">
+	#URL路径
+</p>
+<p align="left">
+	path=/put
+</p>
+<p align="left">
+	#URL参数内容
+</p>
+<p align="left">
+	content=name=test&amp;sk1=123456789&amp;sk2=123456&amp;sk3=15120189784&amp;content=english0000000&amp;pk=9999
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p>
+	&nbsp;
+</p>
+<h3>
+	客户端使用:
+</h3>
+<p>
+	<strong>单机使用:</strong>
+</p>
+<p align="left">
+	HttpClientSupport client = newHttpClientSupport();
+</p>
+<p align="left">
+	HttpRequestMessage request = newHttpRequestMessage(“/put”, “test”, TCPObject.class,”pk=1000&amp;content=content”);
+</p>
+<p align="left">
+	不等待返回:client.sendMessage(request,false,null,”127.0.0.1:8080”)
+</p>
+<p>
+	等待返回:client.sendMessage(request,true,null,”127.0.0.1:8080”)
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	<strong>多机使用(均衡方式):</strong>
+</p>
+<p align="left">
+	RoundRobin rr = new RoundRobin();//哈希取模方式,在服务器故障,自动分配到正常的服务器
+</p>
+<p align="left">
+	HttpClientSupport client = newHttpClientSupport(rr);/使用配置文件client.server.ips
+</p>
+<p align="left">
+	HttpRequestMessage request = newHttpRequestMessage(“/put”, “test”, TCPObject.class,”pk=1000&amp;content=content”);
+</p>
+<p>
+	client.sendMessage(request,false,1)
+</p>
+<p>
+	&nbsp;
+</p>
+<p>
+	&nbsp;
+</p>
+<h3>
+	例子说明:
+</h3>
+<p align="left">
+	<strong>以短信为例子: 短信ID,发送人,接收人,短信内容:</strong>
+</p>
+<p>
+	http://ip:prot/put?name=test&amp;pk=1000&amp;sk1=13511111111&amp;sk2=13611111111&amp;content=message
+</p>
+<p align="left">
+	短信入队: new HttpRequestMessage(“/put”, “test”,null,”pk=1000&amp;sk1=13511111111&amp;sk2=13611111111&amp;content=message”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/put?name=test&amp;class=com.sinovatech.sqsdb.common.TCPObject&amp;pk=1000&amp;sk1=13511111111&amp;sk2=13611111111&amp;content=message
+</p>
+<p align="left">
+	短信入队: new HttpRequestMessage(“/put”, “test”, TCPObject.class,”pk=1000&amp;sk1=13511111111&amp;sk2=13611111111&amp;content=message”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/poll?name=test
+</p>
+<p align="left">
+	短信出队: new HttpRequestMessage(“/poll”, “test”,null,null)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/remove?name=test&amp;pk=9999
+</p>
+<p align="left">
+	按短信ID删除短信: new HttpRequestMessage(“/remove”, “test”,null,”pk=1000”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/remove?name=test&amp;sk2=13611111111
+</p>
+<p align="left">
+	按接收人删除短信: new HttpRequestMessage(“/remove”, “test”,null,”sk2=13611111111”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/setHead?name=test&amp;pk=1000
+</p>
+<p align="left">
+	按短信ID移到队头: new HttpRequestMessage(“/setHead”, “test”,null,”pk=1000”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/setHead?name=test&amp;sk2=13611111111
+</p>
+<p align="left">
+	按接收人移动队头: new HttpRequestMessage(“/setHead”, “test”,null,”sk2=13611111111”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/setPosition?name=test&amp;sk2=13611111111&amp;var=60000
+</p>
+<p align="left">
+	按接收人设置队列位置: new HttpRequestMessage(“/setPosition”, “test”,null,”sk2=13611111111&amp;var=60000”) 
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/getCount?name=test
+</p>
+<p align="left">
+	队列长度: new HttpRequestMessage(“/getCount”, “test”,null,null)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/getCount?name=test&amp;key=pk
+</p>
+<p align="left">
+	队列长度: new HttpRequestMessage(“/getCount”, “test”,null,”key=pk”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/getCount?name=test&amp;key=sk2
+</p>
+<p align="left">
+	接收人个数: new HttpRequestMessage(“/getCount”, “test”,null,”key=sk2”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/getPosition?name=test&amp;pk=9999
+</p>
+<p align="left">
+	按短信ID查询队列位置: new HttpRequestMessage(“/getPosition”, “test”,null,”pk=9999”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/get?name=test&amp;pk=9999
+</p>
+<p align="left">
+	按短信ID查询短信: new HttpRequestMessage(“/get”, “test”,null,”pk=9999”)
+</p>
+<p align="left">
+	&nbsp;
+</p>
+<p align="left">
+	http://ip:prot/stop
+</p>
+<p align="left">
+	停止队列服务: new HttpRequestMessage(“/stop”, null,null,null)
+</p>
+<p align="left">
+</p>
+<br />
+<br />
+</BODY>
+</HTML>

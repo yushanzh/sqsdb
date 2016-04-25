@@ -1,0 +1,13 @@
+com.sinovatech.common.config
+com.sinovatech.common.config.bean
+com.sinovatech.common.config.build
+com.sinovatech.common.config.file
+com.sinovatech.common.util
+com.sinovatech.sqsdb.bdb
+com.sinovatech.sqsdb.client
+com.sinovatech.sqsdb.common
+com.sinovatech.sqsdb.common.pool
+com.sinovatech.sqsdb.server.codec
+com.sinovatech.sqsdb.server.common
+com.sinovatech.sqsdb.server.ssl
+com.sinovatech.sqsdb.socket
